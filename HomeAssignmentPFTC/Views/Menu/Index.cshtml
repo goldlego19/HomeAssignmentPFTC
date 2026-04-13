@@ -1,7 +1,140 @@
+@model HomeAssignmentPFTC.Models.MenuViewModel
 @{
-    ViewData["Title"] = "Menu Page";
+ViewData["Title"] = "Upload Menus";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome to Menus</h1>
+<div class="container pb-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+
+            <div class="text-center mb-5">
+                <h1 class="fw-bold">Upload Menus</h1>
+                <p class="text-muted">Select multiple images to process them simultaneously.</p>
+            </div>
+
+            <div class="modern-card">
+                <form id="uploadForm" enctype="multipart/form-data">
+                    <div class="mb-4">
+                        <label for="menuImagesInput" class="form-label fw-bold text-muted small text-uppercase">Select Image Files</label>
+                        <input id="menuImagesInput" name="menuImages" class="form-control form-control-lg bg-light border-0" type="file" accept="image/*" multiple required>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100 btn-lg" id="uploadBtn">
+                        Process Menus
+                    </button>
+                </form>
+
+                <div id="statusMessage" class="mt-3"></div>
+            </div>
+
+            <div id="uploadListContainer" class="mt-4"></div>
+
+        </div>
+    </div>
 </div>
+
+@section Scripts {
+<script>
+    document.getElementById('uploadForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+
+        var fileInput = document.getElementById('menuImagesInput');
+        var files = fileInput.files;
+        if (files.length === 0) return;
+
+        var uploadBtn = document.getElementById('uploadBtn');
+        var uploadListContainer = document.getElementById('uploadListContainer');
+        var statusMessage = document.getElementById('statusMessage');
+
+        // Reset UI
+        uploadBtn.disabled = true;
+        statusMessage.innerHTML = '';
+        uploadListContainer.innerHTML = '';
+
+        var completedUploads = 0;
+        var totalUploads = files.length;
+
+        Array.from(files).forEach((file, index) => {
+
+            // Modernised individual file row
+            var fileRow = document.createElement('div');
+            fileRow.className = 'modern-card p-3 mb-3';
+            fileRow.style.padding = '1.5rem !important';
+            fileRow.innerHTML = `
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="text-truncate fw-medium" style="max-width: 85%; color: #374151;">
+                            <svg width="20" height="20" class="me-2 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                            ${file.name}
+                        </span>
+                        <span id="statusText_${index}" class="text-muted small fw-bold">0%</span>
+                    </div>
+                    <div class="progress bg-light" style="height: 8px; border-radius: 10px;">
+                        <div id="progressBar_${index}" class="progress-bar progress-bar-animated progress-bar-striped" role="progressbar" style="width: 0%; border-radius: 10px; background-color: #4f46e5;"></div>
+                    </div>
+                `;
+            uploadListContainer.appendChild(fileRow);
+
+            var formData = new FormData();
+            formData.append('menuImages', file);
+
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', '@Url.Action("UploadImageAjax", "Menu")', true);
+
+            xhr.upload.onprogress = function (e) {
+                if (e.lengthComputable) {
+                    var percentComplete = Math.round((e.loaded / e.total) * 100);
+                    document.getElementById(`progressBar_${index}`).style.width = percentComplete + '%';
+                    document.getElementById(`statusText_${index}`).innerText = percentComplete + '%';
+                }
+            };
+
+            xhr.onload = function () {
+                completedUploads++;
+                var pBar = document.getElementById(`progressBar_${index}`);
+                var pText = document.getElementById(`statusText_${index}`);
+                pBar.classList.remove('progress-bar-animated', 'progress-bar-striped');
+
+                if (xhr.status === 200) {
+                    var response = JSON.parse(xhr.responseText);
+                    if (response.success) {
+                        pBar.style.backgroundColor = '#10b981'; // Modern green
+                        pText.innerText = 'Complete';
+                        pText.classList.replace('text-muted', 'text-success');
+                    } else {
+                        pBar.style.backgroundColor = '#ef4444'; // Modern red
+                        pText.innerText = 'Failed';
+                        pText.classList.replace('text-muted', 'text-danger');
+                    }
+                } else {
+                    pBar.style.backgroundColor = '#ef4444';
+                    pText.innerText = 'Error';
+                    pText.classList.replace('text-muted', 'text-danger');
+                }
+                checkIfAllFinished();
+            };
+
+            xhr.onerror = function() {
+                completedUploads++;
+                var pBar = document.getElementById(`progressBar_${index}`);
+                var pText = document.getElementById(`statusText_${index}`);
+
+                pBar.classList.remove('progress-bar-animated', 'progress-bar-striped');
+                pBar.style.backgroundColor = '#ef4444';
+                pText.innerText = 'Network Error';
+                pText.classList.replace('text-muted', 'text-danger');
+
+                checkIfAllFinished();
+            };
+
+            function checkIfAllFinished() {
+                if (completedUploads === totalUploads) {
+                    uploadBtn.disabled = false;
+                    fileInput.value = '';
+                    statusMessage.innerHTML = '<div class="alert alert-success border-0 shadow-sm mt-3" style="background-color: #d1fae5; color: #065f46; border-radius: 0.5rem;">All selected menus have finished uploading.</div>';
+                }
+            }
+
+            xhr.send(formData);
+        });
+    });
+</script>
+}
