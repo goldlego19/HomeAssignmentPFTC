@@ -2,19 +2,20 @@ using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using HomeAssignmentPFTC.Models;
 using HomeAssignmentPFTC.Interfaces;
-
+using HomeAssignmentPFTC.DataAccess;
 namespace HomeAssignmentPFTC.Controllers;
 
 public class MenuController : Controller
 {
     private readonly ILogger<MenuController> _logger;
     private readonly IBucketStorageService _bucketStorageService;
-
+    private readonly FirestoreRepository _firestoreRepository;
     // Inject the IBucketStorageService via the constructor
-    public MenuController(ILogger<MenuController> logger, IBucketStorageService bucketStorageService)
+    public MenuController(ILogger<MenuController> logger, IBucketStorageService bucketStorageService, FirestoreRepository firestoreRepository)
     {
         _logger = logger;
         _bucketStorageService = bucketStorageService;
+        _firestoreRepository = firestoreRepository;
     }
     
     [HttpGet]
@@ -31,29 +32,29 @@ public class MenuController : Controller
         {
             try
             {
-                var uploadedUrls = new List<string>();
+                // For testing purposes, generate some IDs. 
+                // Later, you might pass these in from the front-end form.
+                string restaurantId = "TestRestaurant_" + Guid.NewGuid().ToString().Substring(0, 5);
+                string menuId = "Menu_" + Guid.NewGuid().ToString().Substring(0, 5);
 
-                // Loop through and upload each file
                 foreach (var image in menuImages)
                 {
                     if (image.Length > 0)
                     {
+                        // 1. Upload to Cloud Storage
                         string fileUrl = await _bucketStorageService.UploadFileAsync(image, null);
-                        uploadedUrls.Add(fileUrl);
+                    
+                        // 2. Save reference to Firestore Database
+                        await _firestoreRepository.SaveMenuImageAsync(restaurantId, menuId, fileUrl);
                     }
                 }
             
-                // Return success status and the list of new URLs
-                return Json(new { 
-                    success = true, 
-                    urls = uploadedUrls, 
-                    message = $"Successfully uploaded {uploadedUrls.Count} menu image(s)!" 
-                });
+                return Json(new { success = true, message = "Successfully uploaded and saved to database!" });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to upload the menu images.");
-                return Json(new { success = false, message = "An error occurred whilst uploading the images." });
+                _logger.LogError(ex, "Failed to upload and save the menu images.");
+                return Json(new { success = false, message = "An error occurred." });
             }
         }
     

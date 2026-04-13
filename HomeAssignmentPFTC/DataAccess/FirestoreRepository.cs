@@ -1,18 +1,34 @@
-
 using Google.Cloud.Firestore;
-using HomeAssignmentPFTC.Models;
 
 namespace HomeAssignmentPFTC.DataAccess;
 
-
 public class FirestoreRepository
 {
-    private readonly ILogger<FirestoreRepository> _logger;
-    private FirestoreDb _db;
+    private readonly FirestoreDb _firestoreDb;
 
-    public FirestoreRepository(ILogger<FirestoreRepository> logger, IConfiguration configuration)
+    public FirestoreRepository(IConfiguration config)
     {
-        _logger = logger;
-        _db = FirestoreDb.Create(configuration["Authentication:Google:ProjectId"]);
+        // Grabs the ProjectId you already set in your user-secrets
+        string projectId = config.GetValue<string>("Authentication:Google:ProjectId");
+        _firestoreDb = FirestoreDb.Create(projectId);
+    }
+
+    public async Task SaveMenuImageAsync(string restaurantId, string menuId, string imageUrl)
+    {
+        // This creates the exact hierarchy required: restaurants -> menus -> images
+        CollectionReference imagesCollection = _firestoreDb
+            .Collection("restaurants").Document(restaurantId)
+            .Collection("menus").Document(menuId)
+            .Collection("images");
+
+        // The data we want to save
+        var imageData = new Dictionary<string, object>
+        {
+            { "imageUrl", imageUrl },
+            { "uploadedAt", Timestamp.GetCurrentTimestamp() }
+        };
+
+        // Add it to the database
+        await imagesCollection.AddAsync(imageData);
     }
 }
