@@ -2,6 +2,8 @@ using Google.Cloud.Firestore.V1;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.DataProtection.XmlEncryption;
+using HomeAssignmentPFTC.Services;
+using HomeAssignmentPFTC.Interfaces;
 
 namespace HomeAssignmentPFTC
 {
@@ -40,7 +42,7 @@ namespace HomeAssignmentPFTC
             builder.Services.AddAuthorization();
             builder.Services.AddControllersWithViews();
             //builder.Services.AddScoped<FirestoreRepository>();
-            //builder.Services.AddScoped<IBucketStorageService, BucketStorageService>();
+            builder.Services.AddScoped<IBucketStorageService, BucketStorageService>();
 
 
             var app = builder.Build();

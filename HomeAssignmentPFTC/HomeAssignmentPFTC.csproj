@@ -9,7 +9,6 @@
 
     <ItemGroup>
       <PackageReference Include="Google.Cloud.Firestore" Version="4.2.0" />
-      <PackageReference Include="Google.Cloud.Functions.Hosting" Version="3.0.1" />
       <PackageReference Include="Google.Cloud.Storage.V1" Version="4.14.0" />
       <PackageReference Include="Microsoft.AspNetCore.Authentication.Google" Version="8.0.25" />
     </ItemGroup>
