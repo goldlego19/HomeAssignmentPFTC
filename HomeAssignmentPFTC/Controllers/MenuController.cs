@@ -3,25 +3,36 @@ using Microsoft.AspNetCore.Mvc;
 using HomeAssignmentPFTC.Models;
 using HomeAssignmentPFTC.Interfaces;
 using HomeAssignmentPFTC.DataAccess;
+using Google.Cloud.PubSub.V1; // Added for PubSub
+using System.Text.Json;
+using Microsoft.AspNetCore.Authorization; // Added for JSON serialization
+
 namespace HomeAssignmentPFTC.Controllers;
 
+[Authorize]
 public class MenuController : Controller
 {
     private readonly ILogger<MenuController> _logger;
     private readonly IBucketStorageService _bucketStorageService;
     private readonly FirestoreRepository _firestoreRepository;
-    // Inject the IBucketStorageService via the constructor
-    public MenuController(ILogger<MenuController> logger, IBucketStorageService bucketStorageService, FirestoreRepository firestoreRepository)
+    private readonly IConfiguration _configuration; // Added to get Project ID
+
+    // Inject IConfiguration along with your other services
+    public MenuController(
+        ILogger<MenuController> logger, 
+        IBucketStorageService bucketStorageService, 
+        FirestoreRepository firestoreRepository,
+        IConfiguration configuration)
     {
         _logger = logger;
         _bucketStorageService = bucketStorageService;
         _firestoreRepository = firestoreRepository;
+        _configuration = configuration;
     }
     
     [HttpGet]
     public IActionResult Index()
     {
-        // Pass an empty model to the view initially
         return View(new MenuViewModel());
     }
     
@@ -32,8 +43,9 @@ public class MenuController : Controller
         {
             try
             {
-                // For testing purposes, generate some IDs. 
-                // Later, you might pass these in from the front-end form.
+                // Retrieve your project ID from configuration
+                string projectId = _configuration.GetValue<string>("Authentication:Google:ProjectId");
+
                 string restaurantId = "TestRestaurant_" + Guid.NewGuid().ToString().Substring(0, 5);
                 string menuId = "Menu_" + Guid.NewGuid().ToString().Substring(0, 5);
 
@@ -46,10 +58,25 @@ public class MenuController : Controller
                     
                         // 2. Save reference to Firestore Database
                         await _firestoreRepository.SaveMenuImageAsync(restaurantId, menuId, fileUrl);
+
+                        // 3. Publish to Pub/Sub Topic (SE4.6a requirement)
+                        TopicName topicName = TopicName.FromProjectTopic(projectId, "menu-uploads-topic");
+                        PublisherClient publisher = await PublisherClient.CreateAsync(topicName);
+                        
+                        // We send the IDs and URL so the background function knows what to process
+                        var messageData = new 
+                        { 
+                            RestaurantId = restaurantId, 
+                            MenuId = menuId, 
+                            ImageUrl = fileUrl 
+                        };
+                        
+                        string jsonMessage = JsonSerializer.Serialize(messageData);
+                        await publisher.PublishAsync(jsonMessage);
                     }
                 }
             
-                return Json(new { success = true, message = "Successfully uploaded and saved to database!" });
+                return Json(new { success = true, message = "Successfully uploaded and queued for processing!" });
             }
             catch (Exception ex)
             {
