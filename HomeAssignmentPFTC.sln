@@ -4,6 +4,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HomeAssignmentPFTC", "HomeA
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MenuVisionWorker", "MenuVisionWorker\MenuVisionWorker.csproj", "{8FCFDE5F-CA58-4357-8FC1-CB441D086EE2}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MenuDataCleaner", "MenuDataCleaner\MenuDataCleaner.csproj", "{1EF2FB39-6ED9-49CA-A1F6-8A1DCD65FFF1}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -18,5 +20,9 @@ Global
 		{8FCFDE5F-CA58-4357-8FC1-CB441D086EE2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8FCFDE5F-CA58-4357-8FC1-CB441D086EE2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8FCFDE5F-CA58-4357-8FC1-CB441D086EE2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1EF2FB39-6ED9-49CA-A1F6-8A1DCD65FFF1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1EF2FB39-6ED9-49CA-A1F6-8A1DCD65FFF1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1EF2FB39-6ED9-49CA-A1F6-8A1DCD65FFF1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1EF2FB39-6ED9-49CA-A1F6-8A1DCD65FFF1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

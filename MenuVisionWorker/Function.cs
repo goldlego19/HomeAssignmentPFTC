@@ -22,9 +22,6 @@ public class Function : ICloudEventFunction<MessagePublishedData>
     {
         _logger = logger;
         
-        // Initialise Google Cloud services
-        // Ensure you have set the GOOGLE_APPLICATION_CREDENTIALS environment variable 
-        // locally, or when deployed, Google Cloud injects this automatically.
         string projectId = "pftc-home-493205"; // Hardcoded for your specific project
         
         _firestoreDb = FirestoreDb.Create(projectId);
@@ -52,14 +49,13 @@ public class Function : ICloudEventFunction<MessagePublishedData>
             string httpsUrl = payload["ImageUrl"];
 
             // 2. Prepare the Image for the Vision API
-            // Because your bucket is private, Vision API prefers the 'gs://' format rather than 'https://'
             string gsUri = httpsUrl.Replace("https://storage.googleapis.com/", "gs://");
             var image = Image.FromUri(gsUri);
 
             // 3. Call the Cloud Vision API to extract text (OCR)
             _logger.LogInformation($"Analysing image with Vision API: {gsUri}");
-            var response = await _visionClient.DetectDocumentTextAsync(image);
-            string extractedText = response?.Text ?? "No text detected";
+            var response = await _visionClient.DetectTextAsync(image);
+            string extractedText = response.Count > 0 ? response[0].Description : "No text detected";
 
             _logger.LogInformation($"Successfully extracted {extractedText.Length} characters of text.");
 
