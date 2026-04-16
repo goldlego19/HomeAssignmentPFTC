@@ -13,6 +13,8 @@ namespace HomeAssignmentPFTC
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
+            builder.Services.AddMemoryCache();
+            builder.Services.AddHttpClient();
 
             // Setup Credentials
             string? authPath = builder.Configuration["Authentication:Google:Credentials"];

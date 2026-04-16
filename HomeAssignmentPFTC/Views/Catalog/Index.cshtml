@@ -1,0 +1,114 @@
+@model IEnumerable<HomeAssignmentPFTC.Models.CatalogItemViewModel>
+
+@{
+    ViewData["Title"] = "Menu Catalogue";
+}
+
+<div class="container mt-5">
+    <h2 class="mb-4">Menu Catalogue</h2>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-8">
+            <input type="text" id="searchInput" class="form-control form-control-lg" placeholder="Start typing to live-search dishes (e.g., Pasta, Burger)..." />
+        </div>
+        <div class="col-md-4 text-end">
+            <a asp-action="Index" asp-route-sortOrder="@ViewData["PriceSortParam"]" class="btn btn-outline-secondary btn-lg w-100">
+                Sort by Price ↕
+            </a>
+        </div>
+    </div>
+
+    <div class="row row-cols-1 row-cols-md-3 g-4" id="catalogGrid">
+        @if (!Model.Any())
+        {
+            <div class="col-12 text-center text-muted mt-5">
+                <p>No completed menus found. Check back later!</p>
+            </div>
+        }
+        
+        @foreach (var item in Model)
+        {
+            <div class="col menu-card">
+                <div class="card h-100 shadow-sm border-0 bg-light">
+                    <div class="card-body">
+                        <h5 class="card-title text-dark fw-bold dish-name">@item.ItemName</h5>
+                        <h6 class="card-subtitle mb-3 text-success fs-5">@item.DisplayPrice</h6>
+                        <p class="card-text text-muted small mb-0"><i class="bi bi-shop"></i> Restaurant: @item.RestaurantId</p>
+                    </div>
+                    <div class="card-footer bg-transparent border-top-0 pt-0">
+                        <div class="input-group input-group-sm">
+                            <select class="form-select target-lang">
+                                <option value="en">English</option>
+                                <option value="it">Italian</option>
+                                <option value="fr">French</option>
+                                <option value="de">German</option>
+                                <option value="es">Spanish</option>
+                                <option value="ja">Japanese</option>
+                            </select>
+                            <button class="btn btn-outline-info translate-btn" type="button" data-original-text="@item.ItemName">Translate</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.getElementById('searchInput').addEventListener('input', function(e) {
+            // Get the text the user typed and make it lowercase
+            const searchTerm = e.target.value.toLowerCase();
+            
+            // Grab all the menu cards on the page
+            const menuCards = document.querySelectorAll('.menu-card');
+            
+            menuCards.forEach(card => {
+                const dishName = card.querySelector('.dish-name').innerText.toLowerCase();
+                
+                if (dishName.includes(searchTerm)) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        });
+
+        document.querySelectorAll('.translate-btn').forEach(button => {
+            button.addEventListener('click', async function() {
+                const originalText = this.getAttribute('data-original-text');
+                const targetLanguage = this.previousElementSibling.value;
+                const dishNameElement = this.closest('.card').querySelector('.dish-name');
+
+                const originalButtonText = this.innerText;
+                this.innerText = "...";
+                this.disabled = true;
+
+                try {
+                    const response = await fetch('/Catalog/TranslateItem', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ text: originalText, targetLanguage: targetLanguage })
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+
+                        dishNameElement.innerText = data.translatedText;
+
+                        console.log(`Translation loaded from: ${data.source}`);
+                    } else {
+                        alert("Translation failed. Please try again.");
+                    }
+                } catch (error) {
+                    console.error("Error:", error);
+                } finally {
+                    this.innerText = originalButtonText;
+                    this.disabled = false;
+                }
+            });
+        });
+    </script>
+}

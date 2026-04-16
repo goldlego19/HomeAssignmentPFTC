@@ -6,6 +6,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MenuVisionWorker", "MenuVis
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MenuDataCleaner", "MenuDataCleaner\MenuDataCleaner.csproj", "{1EF2FB39-6ED9-49CA-A1F6-8A1DCD65FFF1}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MenuTranslator", "MenuTranslator\MenuTranslator.csproj", "{2D2E2F89-830D-466A-BDD0-CEF58B010069}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -24,5 +26,9 @@ Global
 		{1EF2FB39-6ED9-49CA-A1F6-8A1DCD65FFF1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1EF2FB39-6ED9-49CA-A1F6-8A1DCD65FFF1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1EF2FB39-6ED9-49CA-A1F6-8A1DCD65FFF1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2D2E2F89-830D-466A-BDD0-CEF58B010069}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2D2E2F89-830D-466A-BDD0-CEF58B010069}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2D2E2F89-830D-466A-BDD0-CEF58B010069}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2D2E2F89-830D-466A-BDD0-CEF58B010069}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
