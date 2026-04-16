@@ -5,7 +5,7 @@ using HomeAssignmentPFTC.Services;
 using HomeAssignmentPFTC.Interfaces;
 using HomeAssignmentPFTC.DataAccess;
 using Google.Cloud.SecretManager.V1; // 1. Add this namespace
-
+using Microsoft.AspNetCore.HttpOverrides;
 namespace HomeAssignmentPFTC
 {
     public class Program
@@ -77,8 +77,18 @@ namespace HomeAssignmentPFTC
             builder.Services.AddControllersWithViews();
             builder.Services.AddScoped<FirestoreRepository>();
             builder.Services.AddScoped<IBucketStorageService, BucketStorageService>();
+            
+            builder.Services.Configure<ForwardedHeadersOptions>(options =>
+            {
+                options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+                // Cloud Run proxies change dynamically, so we clear the restrictions
+                options.KnownNetworks.Clear();
+                options.KnownProxies.Clear(); 
+            });
 
             var app = builder.Build();
+            
+            app.UseForwardedHeaders();
 
             app.UseRouting();
 
