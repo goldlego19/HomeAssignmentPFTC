@@ -9,7 +9,6 @@ public class FirestoreRepository
 
     public FirestoreRepository(IConfiguration config)
     {
-        // Grabs the ProjectId you already set in your user-secrets
         string projectId = config.GetValue<string>("Authentication:Google:ProjectId");
         _firestoreDb = FirestoreDb.Create(projectId);
     }
@@ -37,22 +36,60 @@ public class FirestoreRepository
     {
         var catalogItems = new List<CatalogItemViewModel>();
 
-        // Find all menus that have been processed by the Cron Job
+        //Find all menus that have been processed by the Cron Job
         Query readyMenusQuery = _firestoreDb.CollectionGroup("menus").WhereEqualTo("status", "ready");
         QuerySnapshot snapshot = await readyMenusQuery.GetSnapshotAsync();
 
+        //Group them by Restaurant ID to only keep the newest one
+        var latestMenus = new Dictionary<string, DocumentSnapshot>();
+
         foreach (var document in snapshot.Documents)
         {
-            if (document.TryGetValue("items", out List<Dictionary<string, object>> items))
+            string restId = document.Reference.Parent.Parent?.Id ?? "Unknown";
+
+            if (!latestMenus.ContainsKey(restId))
             {
-                string restId = document.Reference.Parent.Parent?.Id ?? "Unknown";
+                latestMenus[restId] = document;
+            }
+            else
+            {
+                if (document.TryGetValue("cleanedAt", out Timestamp currentDocTime) && 
+                    latestMenus[restId].TryGetValue("cleanedAt", out Timestamp savedDocTime))
+                {
+                    if (currentDocTime.ToDateTime() > savedDocTime.ToDateTime())
+                    {
+                        latestMenus[restId] = document; 
+                    }
+                }
+            }
+        }
+
+        //Loop through the newest menus and fetch the items
+        foreach (var kvp in latestMenus)
+        {
+            string restId = kvp.Key;
+            DocumentSnapshot menuDoc = kvp.Value;
+
+            string restaurantName = "Unknown Restaurant";
+            string locality = "Unknown Locality";
             
+            if (menuDoc.Reference.Parent.Parent != null)
+            {
+                DocumentSnapshot restSnapshot = await menuDoc.Reference.Parent.Parent.GetSnapshotAsync();
+                if (restSnapshot.Exists)
+                {
+                    restaurantName = restSnapshot.TryGetValue("name", out string n) ? n : "Unknown Restaurant";
+                    locality = restSnapshot.TryGetValue("locality", out string l) ? l : "Unknown Locality";
+                }
+            }
+
+            if (menuDoc.TryGetValue("items", out List<Dictionary<string, object>> items))
+            {
                 foreach (var item in items)
                 {
                     string name = item.ContainsKey("itemName") ? item["itemName"].ToString() ?? "" : "";
                     string priceStr = item.ContainsKey("price") ? item["price"].ToString() ?? "" : "";
                 
-                    // Strip out currency symbols so we can convert the string into a mathematical decimal for sorting
                     decimal numericPrice = 0;
                     string cleanPrice = System.Text.RegularExpressions.Regex.Replace(priceStr, @"[^\d\.,]", "").Replace(",", ".");
                     decimal.TryParse(cleanPrice, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out numericPrice);
@@ -60,7 +97,9 @@ public class FirestoreRepository
                     catalogItems.Add(new CatalogItemViewModel
                     {
                         RestaurantId = restId,
-                        MenuId = document.Id,
+                        MenuId = menuDoc.Id,
+                        RestaurantName = restaurantName,
+                        Locality = locality,
                         ItemName = name,
                         DisplayPrice = priceStr,
                         NumericPrice = numericPrice
@@ -68,6 +107,7 @@ public class FirestoreRepository
                 }
             }
         }
+        
         return catalogItems;
     }
 }

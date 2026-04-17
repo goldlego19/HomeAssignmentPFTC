@@ -38,9 +38,8 @@ public class BucketStorageService: IBucketStorageService
             using (var memorystream = new MemoryStream())
             {
                 await file.CopyToAsync(memorystream);
-                memorystream.Position = 0; // Reset the stream position to the beginning
+                memorystream.Position = 0;
 
-                //Upload the file to Google Cloud Storage
                 UploadObjectOptions options = new UploadObjectOptions();
                 var storageObject = await _storageClient.UploadObjectAsync(_bucketName, fileNameForStorage, contentType, memorystream, options);
                 _logger.LogInformation($"File {fileNameForStorage} uploaded to bucket {_bucketName} successfully.");

@@ -37,7 +37,7 @@ public class MenuController : Controller
     }
     
     [HttpPost]
-    public async Task<IActionResult> UploadImageAjax(List<IFormFile> menuImages)
+    public async Task<IActionResult> UploadImageAjax(List<IFormFile> menuImages,string restaurantName,string locality)
     {
         if (menuImages != null && menuImages.Count > 0)
         {
@@ -46,8 +46,13 @@ public class MenuController : Controller
                 // Retrieve your project ID from configuration
                 string projectId = _configuration.GetValue<string>("Authentication:Google:ProjectId");
 
-                string restaurantId = "TestRestaurant_" + Guid.NewGuid().ToString().Substring(0, 5);
-                string menuId = "Menu_" + Guid.NewGuid().ToString().Substring(0, 5);
+                // Create predictable IDs using the new input fields
+                string safeName = System.Text.RegularExpressions.Regex.Replace(restaurantName.ToLower().Trim(), @"[^a-z0-9]+", "-");
+                string safeLocality = System.Text.RegularExpressions.Regex.Replace(locality.ToLower().Trim(), @"[^a-z0-9]+", "-");
+                string restaurantId = $"{safeName}-{safeLocality}".Trim('-');
+                
+                // Creates a unique menu ID incorporating the locality
+                string menuId = $"{safeLocality}-menu-" + Guid.NewGuid().ToString().Substring(0, 5);
 
                 foreach (var image in menuImages)
                 {

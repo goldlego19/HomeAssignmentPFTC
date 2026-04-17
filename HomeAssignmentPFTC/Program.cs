@@ -16,14 +16,12 @@ namespace HomeAssignmentPFTC
             builder.Services.AddMemoryCache();
             builder.Services.AddHttpClient();
 
-            // Setup Credentials
             string? authPath = builder.Configuration["Authentication:Google:Credentials"];
             if (!string.IsNullOrEmpty(authPath))
             {
                 Environment.SetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS", authPath);
             }
 
-            // --- 2. LOAD SECRET FROM GOOGLE CLOUD SECRET MANAGER ---
             string projectId = builder.Configuration["Authentication:Google:ProjectId"] ?? "";
             
             try

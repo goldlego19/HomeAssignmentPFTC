@@ -1,6 +1,6 @@
 @model HomeAssignmentPFTC.Models.MenuViewModel
 @{
-ViewData["Title"] = "Upload Menus";
+    ViewData["Title"] = "Upload Menus";
 }
 
 <div class="container pb-5">
@@ -9,15 +9,103 @@ ViewData["Title"] = "Upload Menus";
 
             <div class="text-center mb-5">
                 <h1 class="fw-bold">Upload Menus</h1>
-                <p class="text-muted">Select multiple images to process them simultaneously.</p>
+                <p class="text-muted">Select multiple images and provide restaurant details to process them simultaneously.</p>
             </div>
 
             <div class="modern-card">
                 <form id="uploadForm" enctype="multipart/form-data">
+                    
+                    <div class="mb-3">
+                        <label for="restaurantName" class="form-label fw-bold text-muted small text-uppercase">Restaurant Name</label>
+                        <input id="restaurantName" name="restaurantName" class="form-control form-control-lg bg-light border-0" type="text" placeholder="e.g., The Red Lion" required>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="locality" class="form-label fw-bold text-muted small text-uppercase">Locality</label>
+                        <select id="locality" name="locality" class="form-select form-select-lg bg-light border-0" required>
+                            <option value="" disabled selected>Select a locality...</option>
+                            
+                            <optgroup label="Malta">
+                                <option value="attard">Attard</option>
+                                <option value="balzan">Balzan</option>
+                                <option value="birgu">Birgu (Vittoriosa)</option>
+                                <option value="birkirkara">Birkirkara</option>
+                                <option value="birzebbuga">Birżebbuġa</option>
+                                <option value="bormla">Bormla (Cospicua)</option>
+                                <option value="dingli">Dingli</option>
+                                <option value="fgura">Fgura</option>
+                                <option value="floriana">Floriana</option>
+                                <option value="gharghur">Għargħur</option>
+                                <option value="ghaxaq">Għaxaq</option>
+                                <option value="gudja">Gudja</option>
+                                <option value="gzira">Gżira</option>
+                                <option value="hamrun">Ħamrun</option>
+                                <option value="iklin">Iklin</option>
+                                <option value="kalkara">Kalkara</option>
+                                <option value="kirkop">Kirkop</option>
+                                <option value="lija">Lija</option>
+                                <option value="luqa">Luqa</option>
+                                <option value="marsa">Marsa</option>
+                                <option value="marsaskala">Marsaskala</option>
+                                <option value="marsaxlokk">Marsaxlokk</option>
+                                <option value="mdina">Mdina</option>
+                                <option value="mellieha">Mellieħa</option>
+                                <option value="mgarr">Mġarr</option>
+                                <option value="mosta">Mosta</option>
+                                <option value="mqabba">Mqabba</option>
+                                <option value="msida">Msida</option>
+                                <option value="mtarfa">Mtarfa</option>
+                                <option value="naxxar">Naxxar</option>
+                                <option value="paola">Paola</option>
+                                <option value="pembroke">Pembroke</option>
+                                <option value="pieta">Pietà</option>
+                                <option value="qormi">Qormi</option>
+                                <option value="qrendi">Qrendi</option>
+                                <option value="rabat">Rabat</option>
+                                <option value="safi">Safi</option>
+                                <option value="st-julians">San Ġiljan (St. Julian's)</option>
+                                <option value="san-gwann">San Ġwann</option>
+                                <option value="st-pauls-bay">San Pawl il-Baħar (St. Paul's Bay)</option>
+                                <option value="santa-lucija">Santa Luċija</option>
+                                <option value="santa-venera">Santa Venera</option>
+                                <option value="senglea">Senglea (Isla)</option>
+                                <option value="siggiewi">Siġġiewi</option>
+                                <option value="sliema">Sliema</option>
+                                <option value="swieqi">Swieqi</option>
+                                <option value="ta-xbiex">Ta' Xbiex</option>
+                                <option value="tarxien">Tarxien</option>
+                                <option value="valletta">Valletta</option>
+                                <option value="xghajra">Xgħajra</option>
+                                <option value="zabbar">Żabbar</option>
+                                <option value="zebbug">Żebbuġ</option>
+                                <option value="zejtun">Żejtun</option>
+                                <option value="zurrieq">Żurrieq</option>
+                            </optgroup>
+        
+                            <optgroup label="Gozo">
+                                <option value="fontana">Fontana</option>
+                                <option value="ghajnsielem">Għajnsielem</option>
+                                <option value="gharb">Għarb</option>
+                                <option value="ghasri">Għasri</option>
+                                <option value="kercem">Kerċem</option>
+                                <option value="munxar">Munxar</option>
+                                <option value="nadur">Nadur</option>
+                                <option value="qala">Qala</option>
+                                <option value="san-lawrenz">San Lawrenz</option>
+                                <option value="sannat">Sannat</option>
+                                <option value="victoria-gozo">Victoria</option>
+                                <option value="xaghra">Xagħra</option>
+                                <option value="xewkija">Xewkija</option>
+                                <option value="zebbug-gozo">Żebbuġ (Gozo)</option>
+                            </optgroup>
+                        </select>
+                    </div>
+
                     <div class="mb-4">
                         <label for="menuImagesInput" class="form-label fw-bold text-muted small text-uppercase">Select Image Files</label>
                         <input id="menuImagesInput" name="menuImages" class="form-control form-control-lg bg-light border-0" type="file" accept="image/*" multiple required>
                     </div>
+                    
                     <button type="submit" class="btn btn-primary w-100 btn-lg" id="uploadBtn">
                         Process Menus
                     </button>
@@ -36,10 +124,13 @@ ViewData["Title"] = "Upload Menus";
 <script>
     document.getElementById('uploadForm').addEventListener('submit', function (e) {
         e.preventDefault();
-
         var fileInput = document.getElementById('menuImagesInput');
         var files = fileInput.files;
         if (files.length === 0) return;
+
+        // NEW: Grab the text values before looping through files
+        var restName = document.getElementById('restaurantName').value;
+        var localityValue = document.getElementById('locality').value;
 
         var uploadBtn = document.getElementById('uploadBtn');
         var uploadListContainer = document.getElementById('uploadListContainer');
@@ -52,7 +143,6 @@ ViewData["Title"] = "Upload Menus";
 
         var completedUploads = 0;
         var totalUploads = files.length;
-
         Array.from(files).forEach((file, index) => {
 
             // Modernised individual file row
@@ -75,6 +165,9 @@ ViewData["Title"] = "Upload Menus";
 
             var formData = new FormData();
             formData.append('menuImages', file);
+            // NEW: Attach the text fields to the AJAX payload
+            formData.append('restaurantName', restName);
+            formData.append('locality', localityValue);
 
             var xhr = new XMLHttpRequest();
             xhr.open('POST', '@Url.Action("UploadImageAjax", "Menu")', true);
@@ -92,7 +185,7 @@ ViewData["Title"] = "Upload Menus";
                 var pBar = document.getElementById(`progressBar_${index}`);
                 var pText = document.getElementById(`statusText_${index}`);
                 pBar.classList.remove('progress-bar-animated', 'progress-bar-striped');
-
+                
                 if (xhr.status === 200) {
                     var response = JSON.parse(xhr.responseText);
                     if (response.success) {
