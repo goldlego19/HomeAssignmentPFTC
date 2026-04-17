@@ -1,7 +1,10 @@
+using System.Text.Json;
 using Google.Cloud.SecretManager.V1;
+using HomeAssignmentPFTC.Interfaces;
+
 namespace HomeAssignmentPFTC.Services;
 
-public class GoogleSecretManagerService
+public class GoogleSecretManagerService : IGoogleSecretManagerService
 {
     private readonly SecretManagerServiceClient _client;
     private readonly ILogger<GoogleSecretManagerService> _logger;
@@ -38,11 +41,22 @@ public class GoogleSecretManagerService
 
         try
         {
+            var googleClientJson = await GetSecretAsync("oauth-client-secret");
+            var jsonDoc = JsonDocument.Parse(googleClientJson);
+            var web = jsonDoc.RootElement.GetProperty("web");
+            
             var secrets = new Dictionary<string, string>
             {
-                { "Authentication:Google:ClientId", await GetSecretAsync("Google:ClientId") },
-                { "Authentication:Google:ClientSecret", await GetSecretAsync("Google:ClientSecret") }
+                { "Authentication:Google:ClientId", web.GetProperty("client_id").ToString() },
+                { "Authentication:Google:ClientSecret", web.GetProperty("client_secret").ToString() },
             };
+
+            foreach (var kvp in secrets)
+            {
+                config[kvp.Key] = kvp.Value;
+                _logger.LogInformation($"Loaded Secret {kvp.Key} into Configuration");
+            }
+            _logger.LogInformation($"Configuration secrets set Successfully");
         }
         catch (Exception e)
         {
