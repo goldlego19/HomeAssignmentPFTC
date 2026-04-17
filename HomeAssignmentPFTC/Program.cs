@@ -4,13 +4,14 @@ using Microsoft.AspNetCore.Authentication.Google;
 using HomeAssignmentPFTC.Services;
 using HomeAssignmentPFTC.Interfaces;
 using HomeAssignmentPFTC.DataAccess;
-using Google.Cloud.SecretManager.V1; // 1. Add this namespace
 using Microsoft.AspNetCore.HttpOverrides;
+
 namespace HomeAssignmentPFTC
 {
     public class Program
     {
-        public static void Main(string[] args)
+        // 1. Update Main to be an async Task
+        public static async Task Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
             builder.Services.AddMemoryCache();
@@ -24,29 +25,26 @@ namespace HomeAssignmentPFTC
 
             string projectId = builder.Configuration["Authentication:Google:ProjectId"] ?? "";
             
+            using var loggerFactory = LoggerFactory.Create(loggingBuilder => loggingBuilder.AddConsole());
+            var logger = loggerFactory.CreateLogger<GoogleSecretManagerService>();
+
+            // Instantiate your custom service
+            var secretManagerService = new GoogleSecretManagerService(projectId, logger);
+
+            // Register it in Dependency Injection so you can inject it into Controllers if needed later
+            builder.Services.AddSingleton<IGoogleSecretManagerService>(secretManagerService);
+
             try
             {
-                // Create the client
-                SecretManagerServiceClient client = SecretManagerServiceClient.Create();
-                
-                // Construct the resource name for the latest version of our secret
-                SecretVersionName secretVersionName = new SecretVersionName(projectId, "oauth-client-secret", "latest");
-                
-                // Fetch the secret
-                AccessSecretVersionResponse result = client.AccessSecretVersion(secretVersionName);
-                
-                // Overwrite the local configuration with the secure cloud payload
-                builder.Configuration["Authentication:Google:ClientSecret"] = result.Payload.Data.ToStringUtf8();
-                
-                Console.WriteLine("Successfully loaded OAuth Client Secret from Secret Manager.");
+                // Load the secrets dynamically into builder.Configuration
+                await secretManagerService.LoadSecretsIntoConfigurationAsync(builder.Configuration);
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"WARNING: Failed to load secret from Google Cloud. Falling back to local secrets. Error: {ex.Message}");
+                Console.WriteLine($"WARNING: Failed to load secrets from Google Cloud. Error: {ex.Message}");
             }
-            // --------------------------------------------------------
+            // ----------------------------------------------
 
-            // Google Auth Schemes
             builder.Services.AddAuthentication(options =>
             {
                 options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
@@ -54,7 +52,6 @@ namespace HomeAssignmentPFTC
             }).AddCookie().AddGoogle(GoogleDefaults.AuthenticationScheme,options =>
             {
                 options.ClientId = builder.Configuration["Authentication:Google:ClientId"];
-                // This now uses the value dynamically loaded from the cloud!
                 options.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"]; 
                 options.Scope.Add("profile");
                 options.Events.OnCreatingTicket = ctx =>
@@ -79,7 +76,6 @@ namespace HomeAssignmentPFTC
             builder.Services.Configure<ForwardedHeadersOptions>(options =>
             {
                 options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
-                // Cloud Run proxies change dynamically, so we clear the restrictions
                 options.KnownNetworks.Clear();
                 options.KnownProxies.Clear(); 
             });
