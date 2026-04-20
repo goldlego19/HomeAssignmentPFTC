@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using HomeAssignmentPFTC.DataAccess;
 using HomeAssignmentPFTC.Models;
-using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Caching.Distributed; 
 using System.Text.Json;
 using System.Text;
 
@@ -10,10 +10,10 @@ namespace HomeAssignmentPFTC.Controllers;
 public class CatalogController : Controller
 {
     private readonly FirestoreRepository _firestoreRepository;
-    private readonly IMemoryCache _cache;
+    private readonly IDistributedCache _cache;
     private readonly IHttpClientFactory _httpClientFactory;
 
-    public CatalogController(FirestoreRepository firestoreRepository, IMemoryCache cache, IHttpClientFactory httpClientFactory)
+    public CatalogController(FirestoreRepository firestoreRepository, IDistributedCache cache, IHttpClientFactory httpClientFactory)
     {
         _firestoreRepository = firestoreRepository;
         _cache = cache;
@@ -52,7 +52,10 @@ public class CatalogController : Controller
 
         string cacheKey = $"{request.Text}_{request.TargetLanguage}";
 
-        if (_cache.TryGetValue(cacheKey, out string cachedTranslation))
+        //Check Redis for the translation
+        string? cachedTranslation = await _cache.GetStringAsync(cacheKey);
+
+        if (!string.IsNullOrEmpty(cachedTranslation))
         {
             return Json(new { translatedText = cachedTranslation, source = "cache" });
         }
@@ -68,12 +71,13 @@ public class CatalogController : Controller
         {
             var responseString = await response.Content.ReadAsStringAsync();
             var result = JsonSerializer.Deserialize<JsonElement>(responseString);
-            string translatedText = result.GetProperty("translatedText").GetString();
+            string translatedText = result.GetProperty("translatedText").GetString() ?? "";
 
-            var cacheOptions = new MemoryCacheEntryOptions()
-                .SetAbsoluteExpiration(TimeSpan.FromHours(24)); // Keep in cache for 24 hours
+            // Save the new translation to Redis
+            var cacheOptions = new DistributedCacheEntryOptions()
+                .SetAbsoluteExpiration(TimeSpan.FromHours(24)); 
             
-            _cache.Set(cacheKey, translatedText, cacheOptions);
+            await _cache.SetStringAsync(cacheKey, translatedText, cacheOptions);
 
             return Json(new { translatedText = translatedText, source = "api" });
         }

@@ -14,7 +14,13 @@ namespace HomeAssignmentPFTC
         public static async Task Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
-            builder.Services.AddMemoryCache();
+
+            builder.Services.AddStackExchangeRedisCache(options =>
+            {
+                // This will pull the connection string from your appsettings.json
+                options.Configuration = builder.Configuration.GetConnectionString("RedisCache");
+                options.InstanceName = "PFTC_Menu_";
+            });
             builder.Services.AddHttpClient();
 
             string? authPath = builder.Configuration["Authentication:Google:Credentials"];

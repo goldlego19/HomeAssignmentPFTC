@@ -15,9 +15,37 @@ public class MenuController : Controller
     private readonly ILogger<MenuController> _logger;
     private readonly IBucketStorageService _bucketStorageService;
     private readonly FirestoreRepository _firestoreRepository;
-    private readonly IConfiguration _configuration; // Added to get Project ID
+    private readonly IConfiguration _configuration;
+    
+    private static readonly Dictionary<string, string> LocalityMapping = new(StringComparer.OrdinalIgnoreCase)
+    {
+        { "attard", "Attard" }, { "balzan", "Balzan" }, { "birgu", "Birgu (Vittoriosa)" },
+        { "birkirkara", "Birkirkara" }, { "birzebbuga", "Birżebbuġa" }, { "bormla", "Bormla (Cospicua)" },
+        { "dingli", "Dingli" }, { "fgura", "Fgura" }, { "floriana", "Floriana" },
+        { "gharghur", "Għargħur" }, { "ghaxaq", "Għaxaq" }, { "gudja", "Gudja" },
+        { "gzira", "Gżira" }, { "hamrun", "Ħamrun" }, { "iklin", "Iklin" },
+        { "kalkara", "Kalkara" }, { "kirkop", "Kirkop" }, { "lija", "Lija" },
+        { "luqa", "Luqa" }, { "marsa", "Marsa" }, { "marsaskala", "Marsaskala" },
+        { "marsaxlokk", "Marsaxlokk" }, { "mdina", "Mdina" }, { "mellieha", "Mellieħa" },
+        { "mgarr", "Mġarr" }, { "mosta", "Mosta" }, { "mqabba", "Mqabba" },
+        { "msida", "Msida" }, { "mtarfa", "Mtarfa" }, { "naxxar", "Naxxar" },
+        { "paola", "Paola" }, { "pembroke", "Pembroke" }, { "pieta", "Pietà" },
+        { "qormi", "Qormi" }, { "qrendi", "Qrendi" }, { "rabat", "Rabat" },
+        { "safi", "Safi" }, { "st-julians", "San Ġiljan (St. Julian's)" },
+        { "san-gwann", "San Ġwann" }, { "st-pauls-bay", "San Pawl il-Baħar (St. Paul's Bay)" },
+        { "santa-lucija", "Santa Luċija" }, { "santa-venera", "Santa Venera" },
+        { "senglea", "Senglea (Isla)" }, { "siggiewi", "Siġġiewi" }, { "sliema", "Sliema" },
+        { "swieqi", "Swieqi" }, { "ta-xbiex", "Ta' Xbiex" }, { "tarxien", "Tarxien" },
+        { "valletta", "Valletta" }, { "xghajra", "Xgħajra" }, { "zabbar", "Żabbar" },
+        { "zebbug", "Żebbuġ" }, { "zejtun", "Żejtun" }, { "zurrieq", "Żurrieq" },
+        // Gozo
+        { "fontana", "Fontana" }, { "ghajnsielem", "Għajnsielem" }, { "gharb", "Għarb" },
+        { "ghasri", "Għasri" }, { "kercem", "Kerċem" }, { "munxar", "Munxar" },
+        { "nadur", "Nadur" }, { "qala", "Qala" }, { "san-lawrenz", "San Lawrenz" },
+        { "sannat", "Sannat" }, { "victoria-gozo", "Victoria" }, { "xaghra", "Xagħra" },
+        { "xewkija", "Xewkija" }, { "zebbug-gozo", "Żebbuġ (Gozo)" }
+    };
 
-    // Inject IConfiguration along with your other services
     public MenuController(
         ILogger<MenuController> logger, 
         IBucketStorageService bucketStorageService, 
@@ -45,6 +73,8 @@ public class MenuController : Controller
             {
                 // Retrieve your project ID from configuration
                 string projectId = _configuration.GetValue<string>("Authentication:Google:ProjectId");
+                
+                string displayLocality = LocalityMapping.ContainsKey(locality) ? LocalityMapping[locality] : locality;
 
                 // Create predictable IDs using the new input fields
                 string safeName = System.Text.RegularExpressions.Regex.Replace(restaurantName.ToLower().Trim(), @"[^a-z0-9]+", "-");
@@ -58,17 +88,17 @@ public class MenuController : Controller
                 {
                     if (image.Length > 0)
                     {
-                        // 1. Upload to Cloud Storage
+                        //Upload to Cloud Storage
                         string fileUrl = await _bucketStorageService.UploadFileAsync(image, null);
                     
-                        // 2. Save reference to Firestore Database
-                        await _firestoreRepository.SaveMenuImageAsync(restaurantId, menuId, fileUrl);
+                        //Save reference to Firestore Database
+                        await _firestoreRepository.SaveMenuImageAsync(restaurantId, menuId, fileUrl, restaurantName, displayLocality);
 
-                        // 3. Publish to Pub/Sub Topic (SE4.6a requirement)
+                        //Publish to Pub/Sub Topic (SE4.6a requirement)
                         TopicName topicName = TopicName.FromProjectTopic(projectId, "menu-uploads-topic");
                         PublisherClient publisher = await PublisherClient.CreateAsync(topicName);
                         
-                        // We send the IDs and URL so the background function knows what to process
+                        //We send the IDs and URL so the background function knows what to process
                         var messageData = new 
                         { 
                             RestaurantId = restaurantId, 
