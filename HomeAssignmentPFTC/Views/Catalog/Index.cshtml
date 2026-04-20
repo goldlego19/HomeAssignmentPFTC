@@ -7,40 +7,46 @@
 <div class="container mt-5">
     <h2 class="mb-4">Menu Catalogue</h2>
 
-    <div class="row g-3 mb-4">
+    <div class="row g-3 mb-5 fade-in-up">
         <div class="col-md-8">
-            <input type="text" id="searchInput" class="form-control form-control-lg" placeholder="Start typing to live-search dishes (e.g., Pasta, Burger)..." />
+            <input type="text" id="searchInput" class="form-control form-control-lg glass-input shadow-sm" placeholder="Start typing to live-search dishes (e.g., Pasta, Burger)..." />
         </div>
         <div class="col-md-4 text-end">
-            <a asp-action="Index" asp-route-sortOrder="@ViewData["PriceSortParam"]" class="btn btn-outline-secondary btn-lg w-100">
+            <a asp-action="Index" asp-route-sortOrder="@ViewData["PriceSortParam"]" class="btn glass-button btn-lg w-100 h-100 d-flex align-items-center justify-content-center shadow-sm">
                 Sort by Price ↕
             </a>
         </div>
     </div>
 
     <div class="row row-cols-1 row-cols-md-3 g-4" id="catalogGrid">
+        
         @if (!Model.Any())
         {
-            <div class="col-12 text-center text-muted mt-5">
-                <p>No completed menus found. Check back later!</p>
+            <div class="col-12 text-center text-muted mt-5 fade-in-up">
+                <p class="fs-5">No completed menus found. Check back later!</p>
             </div>
         }
         
+        @{ int delayCounter = 1; }
         @foreach (var item in Model)
         {
+            string currentDelay = $"delay-{(delayCounter % 5) + 1}";
+            delayCounter++;
+
             <div class="col menu-card">
-                <div class="card h-100 shadow-sm border-0 bg-light">
+                <div class="card h-100 glass-panel fade-in-up @currentDelay border-0 bg-transparent">
                     <div class="card-body">
-                        <h5 class="card-title text-dark fw-bold dish-name">@item.ItemName</h5>
-                        <h6 class="card-subtitle mb-3 text-success fs-5">@item.DisplayPrice</h6>
-                        <p class="card-text text-muted small mb-0">
-                            <i class="bi bi-shop"></i> @item.RestaurantName
-                            <span class="badge bg-secondary ms-1">@item.Locality</span>
+                        <h5 class="card-title text-dark fw-bold fs-4 dish-name mb-1">@item.ItemName</h5>
+                        <h6 class="card-subtitle mb-4 text-primary fs-5 fw-bold">@item.DisplayPrice</h6>
+                        <p class="card-text text-muted small mb-0 d-flex align-items-center">
+                            <i class="bi bi-shop me-2"></i> @item.RestaurantName
+                            <span class="badge bg-dark bg-opacity-75 ms-auto rounded-pill px-3">@item.Locality</span>
                         </p>
                     </div>
-                    <div class="card-footer bg-transparent border-top-0 pt-0">
-                        <div class="input-group input-group-sm">
-                            <select class="form-select target-lang">
+                    
+                    <div class="card-footer bg-transparent border-top-0 pt-0 pb-3">
+                        <div class="input-group input-group-sm shadow-sm rounded-3">
+                            <select class="form-select glass-input border-end-0 target-lang">
                                 <option value="" disabled selected>Translate to...</option>
                                 <option value="en">English</option>
                                 <option value="it">Italian</option>
@@ -49,7 +55,7 @@
                                 <option value="es">Spanish</option>
                                 <option value="ja">Japanese</option>
                             </select>
-                            <button class="btn btn-outline-info translate-btn" type="button" data-original-text="@item.ItemName">Translate</button>
+                            <button class="btn glass-button px-4 translate-btn" type="button" data-original-text="@item.ItemName">Translate</button>
                         </div>
                     </div>
                 </div>
@@ -61,10 +67,7 @@
 @section Scripts {
     <script>
         document.getElementById('searchInput').addEventListener('input', function(e) {
-            // Get the text the user typed and make it lowercase
             const searchTerm = e.target.value.toLowerCase();
-            
-            // Grab all the menu cards on the page
             const menuCards = document.querySelectorAll('.menu-card');
             
             menuCards.forEach(card => {
@@ -84,6 +87,12 @@
                 const targetLanguage = this.previousElementSibling.value;
                 const dishNameElement = this.closest('.card').querySelector('.dish-name');
 
+                // Validates that the user has actually selected a language!
+                if (!targetLanguage) {
+                    alert("Please select a language from the drop-down first.");
+                    return;
+                }
+
                 const originalButtonText = this.innerText;
                 this.innerText = "...";
                 this.disabled = true;
@@ -99,9 +108,7 @@
 
                     if (response.ok) {
                         const data = await response.json();
-
                         dishNameElement.innerText = data.translatedText;
-
                         console.log(`Translation loaded from: ${data.source}`);
                     } else {
                         alert("Translation failed. Please try again.");

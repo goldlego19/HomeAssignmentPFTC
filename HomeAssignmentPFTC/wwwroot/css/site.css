@@ -1,22 +1,92 @@
-html {
-  font-size: 14px;
-}
-
-@media (min-width: 768px) {
-  html {
-    font-size: 16px;
-  }
-}
-
-.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
-}
-
-html {
-  position: relative;
-  min-height: 100%;
-}
-
+html { font-size: 14px; }
+@media (min-width: 768px) { html { font-size: 16px; } }
 body {
-  margin-bottom: 60px;
+  margin: 0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  background: linear-gradient(135deg, #f3e8ff 0%, #e0e7ff 50%, #dbeafe 100%);
+  color: #2d3748;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
+/* --- 2. HIGH-VISIBILITY GLASS UTILITIES --- */
+.glass-nav {
+  /* Made significantly more opaque for better readability */
+  background: rgba(255, 255, 255, 0.85) !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.8);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.03);
+  z-index: 1030;
+}
+
+.glass-panel {
+  /* Increased opacity from 0.45 to 0.90 to make the cards highly visible */
+  background: rgba(255, 255, 255, 0.90);
+  border-radius: 20px;
+  /* Added a slightly darker, broader shadow to make them pop off the background */
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  overflow: hidden;
+}
+
+.glass-panel:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 45px rgba(0, 0, 0, 0.12);
+}
+
+.glass-input {
+  background: rgba(255, 255, 255, 0.7) !important;
+  border: 1px solid rgba(255, 255, 255, 0.9) !important;
+  backdrop-filter: blur(5px);
+  border-radius: 12px !important;
+  color: #2d3748 !important;
+  transition: all 0.3s ease;
+}
+
+.glass-input:focus {
+  background: rgba(255, 255, 255, 1) !important;
+  /* Updated focus ring to match the indigo brand color */
+  box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.15) !important;
+  outline: none;
+}
+
+.glass-button {
+  background: rgba(79, 70, 229, 0.95) !important;
+  color: white !important;
+  border: none !important;
+  border-radius: 12px !important;
+  backdrop-filter: blur(5px);
+  transition: all 0.3s ease;
+  font-weight: 600;
+  box-shadow: 0 4px 15px rgba(79, 70, 229, 0.2);
+}
+
+.glass-button:hover {
+  background: rgba(67, 56, 202, 1) !important;
+  transform: scale(1.02);
+  box-shadow: 0 6px 20px rgba(79, 70, 229, 0.35);
+}
+
+/* --- 3. ANIMATIONS --- */
+.fade-in-up {
+  opacity: 0;
+  transform: translateY(30px);
+  animation: fadeInUp 0.8s cubic-bezier(0.165, 0.84, 0.44, 1) forwards;
+}
+
+@keyframes fadeInUp {
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Staggered Delays for beautiful loading */
+.delay-1 { animation-delay: 0.1s; }
+.delay-2 { animation-delay: 0.2s; }
+.delay-3 { animation-delay: 0.3s; }
+.delay-4 { animation-delay: 0.4s; }
+.delay-5 { animation-delay: 0.5s; }
+
+main { flex: 1; }

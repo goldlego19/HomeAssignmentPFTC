@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Google;
+using Microsoft.AspNetCore.Authentication.Cookies;
 namespace HomeAssignmentPFTC.Controllers
 {
     public class AccountController : Controller
@@ -23,9 +24,11 @@ namespace HomeAssignmentPFTC.Controllers
         }
 
 
-        public IActionResult Logout()
+        public async Task<IActionResult> Logout()
         {
-            return SignOut("Cookies");
+            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+        
+            return RedirectToAction("Index", "Home");
         }
 
     }

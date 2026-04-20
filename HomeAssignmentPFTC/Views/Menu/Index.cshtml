@@ -7,22 +7,22 @@
     <div class="row justify-content-center">
         <div class="col-md-8 col-lg-6">
 
-            <div class="text-center mb-5">
-                <h1 class="fw-bold">Upload Menus</h1>
-                <p class="text-muted">Select multiple images and provide restaurant details to process them simultaneously.</p>
+            <div class="text-center mb-5 fade-in-up">
+                <h1 class="fw-bold display-5">Upload Menus</h1>
+                <p class="text-muted fs-5">Select multiple images and provide restaurant details to process them simultaneously.</p>
             </div>
 
-            <div class="modern-card">
+            <div class="glass-panel p-4 p-md-5 fade-in-up delay-1">
                 <form id="uploadForm" enctype="multipart/form-data">
                     
                     <div class="mb-3">
-                        <label for="restaurantName" class="form-label fw-bold text-muted small text-uppercase">Restaurant Name</label>
-                        <input id="restaurantName" name="restaurantName" class="form-control form-control-lg bg-light border-0" type="text" placeholder="e.g., The Red Lion" required>
+                        <label for="restaurantName" class="form-label fw-bold text-muted small text-uppercase ms-1">Restaurant Name</label>
+                        <input id="restaurantName" name="restaurantName" class="form-control form-control-lg glass-input border-0 shadow-sm" type="text" placeholder="e.g., The Red Lion" required>
                     </div>
 
                     <div class="mb-4">
-                        <label for="locality" class="form-label fw-bold text-muted small text-uppercase">Locality</label>
-                        <select id="locality" name="locality" class="form-select form-select-lg bg-light border-0" required>
+                        <label for="locality" class="form-label fw-bold text-muted small text-uppercase ms-1">Locality</label>
+                        <select id="locality" name="locality" class="form-select form-select-lg glass-input border-0 shadow-sm" required>
                             <option value="" disabled selected>Select a locality...</option>
                             
                             <optgroup label="Malta">
@@ -101,12 +101,12 @@
                         </select>
                     </div>
 
-                    <div class="mb-4">
-                        <label for="menuImagesInput" class="form-label fw-bold text-muted small text-uppercase">Select Image Files</label>
-                        <input id="menuImagesInput" name="menuImages" class="form-control form-control-lg bg-light border-0" type="file" accept="image/*" multiple required>
+                    <div class="mb-5">
+                        <label for="menuImagesInput" class="form-label fw-bold text-muted small text-uppercase ms-1">Select Image Files</label>
+                        <input id="menuImagesInput" name="menuImages" class="form-control form-control-lg glass-input border-0 shadow-sm" type="file" accept="image/*" multiple required>
                     </div>
                     
-                    <button type="submit" class="btn btn-primary w-100 btn-lg" id="uploadBtn">
+                    <button type="submit" class="btn w-100 btn-lg glass-button py-3 shadow" id="uploadBtn">
                         Process Menus
                     </button>
                 </form>
@@ -128,7 +128,6 @@
         var files = fileInput.files;
         if (files.length === 0) return;
 
-        // NEW: Grab the text values before looping through files
         var restName = document.getElementById('restaurantName').value;
         var localityValue = document.getElementById('locality').value;
 
@@ -136,7 +135,6 @@
         var uploadListContainer = document.getElementById('uploadListContainer');
         var statusMessage = document.getElementById('statusMessage');
 
-        // Reset UI
         uploadBtn.disabled = true;
         statusMessage.innerHTML = '';
         uploadListContainer.innerHTML = '';
@@ -145,9 +143,9 @@
         var totalUploads = files.length;
         Array.from(files).forEach((file, index) => {
 
-            // Modernised individual file row
             var fileRow = document.createElement('div');
-            fileRow.className = 'modern-card p-3 mb-3';
+            // Restored and updated: Applies the glass panel and animation to the progress bars
+            fileRow.className = 'glass-panel p-3 mb-3 fade-in-up delay-2';
             fileRow.style.padding = '1.5rem !important';
             fileRow.innerHTML = `
                     <div class="d-flex justify-content-between align-items-center mb-2">
@@ -165,7 +163,6 @@
 
             var formData = new FormData();
             formData.append('menuImages', file);
-            // NEW: Attach the text fields to the AJAX payload
             formData.append('restaurantName', restName);
             formData.append('locality', localityValue);
 
@@ -189,11 +186,11 @@
                 if (xhr.status === 200) {
                     var response = JSON.parse(xhr.responseText);
                     if (response.success) {
-                        pBar.style.backgroundColor = '#10b981'; // Modern green
+                        pBar.style.backgroundColor = '#10b981';
                         pText.innerText = 'Complete';
                         pText.classList.replace('text-muted', 'text-success');
                     } else {
-                        pBar.style.backgroundColor = '#ef4444'; // Modern red
+                        pBar.style.backgroundColor = '#ef4444';
                         pText.innerText = 'Failed';
                         pText.classList.replace('text-muted', 'text-danger');
                     }
